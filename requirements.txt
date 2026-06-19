@@ -1,2 +1,6 @@
-opencv-python
+opencv-python==4.8.1.78
 mediapipe==0.10.14
+numpy==1.26.4
+matplotlib==3.8.4
+pillow==10.4.0
+kiwisolver==1.4.5

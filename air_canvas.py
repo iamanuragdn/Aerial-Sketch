@@ -43,53 +43,91 @@
 
 import cv2
 import mediapipe as mp
+import platform
 
-# 1. Initialize MediaPipe Hand Tracking module
+# Initialize MediaPipe Hand Tracking
 mp_hands = mp.solutions.hands
-# Set confidence to 0.7 so it doesn't jitter too much
-hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7) 
+hands = mp_hands.Hands(
+    max_num_hands=1,
+    min_detection_confidence=0.7
+)
+
 mp_draw = mp.solutions.drawing_utils
 
-# 2. Start the webcam
-cap = cv2.VideoCapture(0)
+
+# Select camera backend based on operating system
+system = platform.system()
+
+if system == "Windows":
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+elif system == "Darwin":  # macOS
+    cap = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
+else:  # Linux
+    cap = cv2.VideoCapture(0)
+
+# Check if camera opened
+if not cap.isOpened():
+    print("❌ Error: Could not open camera.")
+    exit()
+
+print(f"✅ Air Canvas started on {system}")
+print("Press 'q' to exit")
+
 
 while True:
+    # Capture frame
     success, img = cap.read()
+
     if not success:
+        print("❌ Failed to capture frame.")
         break
-        
-    # Flip the image horizontally so it acts like a mirror
+
+    # Flip image for mirror effect
     img = cv2.flip(img, 1)
-    
-    # OpenCV uses BGR colors, but MediaPipe requires RGB. We must convert it.
+
+    # Convert BGR to RGB
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    # 3. Send the frame to MediaPipe to find hands
+
+    # Detect hands
     results = hands.process(img_rgb)
-    
-    # 4. If a hand is found, extract the data
+
+    # Draw landmarks and track index finger
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
-            # Draw the cyan wireframe over the hand
-            mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-            
-            # 5. ISOLATE THE INDEX FINGER TIP (Landmark #8)
-            index_finger = hand_landmarks.landmark[8]
-            
-            # The coordinates returned are decimals (e.g., 0.5, 0.2). 
-            # We multiply by the screen width and height to get actual pixel coordinates.
-            h, w, c = img.shape
-            cx, cy = int(index_finger.x * w), int(index_finger.y * h)
-            
-            # Draw a solid red circle right on the tip of the index finger!
-            cv2.circle(img, (cx, cy), 15, (0, 0, 255), cv2.FILLED)
 
-    # Show the final image
+            # Draw hand skeleton
+            mp_draw.draw_landmarks(
+                img,
+                hand_landmarks,
+                mp_hands.HAND_CONNECTIONS
+            )
+
+            # Get index finger tip (landmark 8)
+            index_finger = hand_landmarks.landmark[8]
+
+            # Convert normalized coordinates to pixels
+            h, w, c = img.shape
+            cx = int(index_finger.x * w)
+            cy = int(index_finger.y * h)
+
+            # Draw red circle on index fingertip
+            cv2.circle(
+                img,
+                (cx, cy),
+                15,
+                (0, 0, 255),
+                cv2.FILLED
+            )
+
+    # Show the camera output
     cv2.imshow("Air Canvas - Phase 1", img)
-    
-    # Press 'q' to quit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+
+    # Press q to stop the loop
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        print("👋 Closing Air Canvas...")
         break
 
+
+# Release resources
 cap.release()
 cv2.destroyAllWindows()
