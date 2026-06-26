@@ -60,8 +60,8 @@ system = platform.system()
 
 if system == "Windows":
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-elif system == "Darwin":  # macOS
-    cap = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
+# elif system == "Darwin":  # macOS
+#     cap = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
 else:  # Linux
     cap = cv2.VideoCapture(0)
 
@@ -131,3 +131,74 @@ while True:
 # Release resources
 cap.release()
 cv2.destroyAllWindows()
+
+
+# import cv2
+# import mediapipe as mp
+# import numpy as np  # NEW: We need numpy to create our blank canvas!
+
+# mp_hands = mp.solutions.hands
+# hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7) 
+# mp_draw = mp.solutions.drawing_utils
+
+# cap = cv2.VideoCapture(0)
+
+# # --- NEW: Initialize Memory Variables ---
+# xp, yp = 0, 0
+# imgCanvas = None # We will create this once the camera turns on
+
+# while True:
+#     success, img = cap.read()
+#     if not success:
+#         break
+        
+#     img = cv2.flip(img, 1)
+    
+#     # --- NEW: Create the Invisible Glass ---
+#     # We only do this on the very first frame so it exactly matches your webcam's size
+#     if imgCanvas is None:
+#         imgCanvas = np.zeros_like(img)
+
+#     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#     results = hands.process(img_rgb)
+    
+#     if results.multi_hand_landmarks:
+#         for hand_landmarks in results.multi_hand_landmarks:
+#             # mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS) # (Optional: You can comment this out to hide the skeleton!)
+            
+#             index_finger = hand_landmarks.landmark[8]
+#             h, w, c = img.shape
+#             cx, cy = int(index_finger.x * w), int(index_finger.y * h)
+            
+#             # --- NEW: The Drawing Logic ---
+#             # If this is the first frame we see your hand, start the line right exactly where you are
+#             if xp == 0 and yp == 0:
+#                 xp, yp = cx, cy
+                
+#             # Draw a thick neon pink line from the PAST point to the CURRENT point
+#             cv2.line(imgCanvas, (xp, yp), (cx, cy), (255, 0, 255), 15)
+            
+#             # Update the past points to become the current points for the next loop
+#             xp, yp = cx, cy
+
+#             # Draw the circle on the tip of the finger
+#             cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
+    
+#     # --- NEW: Reset Memory if Hand Disappears ---
+#     else:
+#         # If we don't do this, putting your hand down and raising it again will draw a massive line across the screen!
+#         xp, yp = 0, 0
+
+#     # --- NEW: Blend the Glass and the Webcam ---
+#     # This adds the glowing lines from the canvas directly onto your live video feed
+#     img = cv2.addWeighted(img, 1, imgCanvas, 1, 0)
+
+#     cv2.imshow("Aerial-Sketch", img)
+#     # Optional: You can also show the raw canvas in a separate window to see what the computer is actually doing!
+#     # cv2.imshow("The Invisible Glass", imgCanvas) 
+    
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         break
+
+# cap.release()
+# cv2.destroyAllWindows()
