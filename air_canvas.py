@@ -48,7 +48,7 @@ import platform
 # Initialize MediaPipe Hand Tracking
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
-    max_num_hands=1,
+    max_num_hands=4,
     min_detection_confidence=0.7
 )
 
@@ -102,22 +102,26 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
-            # Get index finger tip (landmark 8)
-            index_finger = hand_landmarks.landmark[8]
+            # # Get index finger tip (landmark 8)
+            # index_finger = hand_landmarks.landmark[8]
+            fingertips_ids=[4,8,12,16,20]
 
-            # Convert normalized coordinates to pixels
-            h, w, c = img.shape
-            cx = int(index_finger.x * w)
-            cy = int(index_finger.y * h)
+            for id in fingertips_ids:
+                finger_landmarks = hand_landmarks.landmark[id]
 
-            # Draw red circle on index fingertip
-            cv2.circle(
-                img,
-                (cx, cy),
-                15,
-                (0, 0, 255),
-                cv2.FILLED
-            )
+                # Convert normalized coordinates to pixels
+                h, w, c = img.shape
+                cx = int(finger_landmarks.x * w)
+                cy = int(finger_landmarks.y * h)
+
+                # Draw red circle on index fingertip
+                cv2.circle(
+                    img,
+                    (cx, cy),
+                    15,
+                    (0, 0, 255),
+                    cv2.FILLED
+                )
 
     # Show the camera output
     cv2.imshow("Air Canvas - Phase 1", img)
